@@ -4,6 +4,11 @@ module.exports = {
   homePage: "/schema?projectKey=taobao&key=product",
   menu: [
     {
+    key: "dashboard",
+    moduleType: "iframe",
+    iframeConfig: { path: "https://example.com" },
+  },
+  {
       key: "order",
       moduleType: "iframe",
       iframeConfig: {

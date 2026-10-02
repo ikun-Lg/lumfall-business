@@ -4,6 +4,11 @@ module.exports = {
   homePage: "/schema?projectKey=pdd&key=product",
   menu: [
     {
+    key: "dashboard",
+    moduleType: "iframe",
+    iframeConfig: { path: "https://example.com" },
+  },
+  {
       key: "product",
       name: "商品管理(pdd)",
     },

@@ -4,6 +4,11 @@ module.exports = {
   homePage: "/schema?projectKey=jd&key=product",
   menu: [
     {
+    key: "dashboard",
+    moduleType: "iframe",
+    iframeConfig: { path: "https://example.com" },
+  },
+  {
       key: "shop-setting",
       name: "店铺设置",
       menuType: "group",

@@ -5,7 +5,7 @@ const app = serviceStart({
   name: "lumfall-business",
 
   // 未命中任何路由时的 302 兜底目标。传了 options 对象必须显式声明 homePath
-  homePath: "/view/project-list",
+  homePath: "/view/login",
 });
 
 module.exports = app;

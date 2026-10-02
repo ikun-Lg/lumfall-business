@@ -7,4 +7,14 @@ module.exports = (app, router) => {
     "/api/auth/current_user",
     authController.getCurrentUser.bind(authController)
   );
+
+  router.post(
+    "/api/auth/update_profile",
+    authController.updateProfile.bind(authController)
+  );
+
+  router.post(
+    "/api/auth/change_password",
+    authController.changePassword.bind(authController)
+  );
 };

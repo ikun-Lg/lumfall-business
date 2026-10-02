@@ -61,5 +61,29 @@ module.exports = (app) => {
         return null;
       }
     }
+
+    /**
+     * 修改昵称
+     * @param {{ userId: string, nickname: string }} param0
+     */
+    updateProfile({ userId, nickname }) {
+      const user = userPool.find((item) => item.userId === userId);
+      if (!user) return null;
+      user.nickname = nickname;
+      const { password: _password, ...safeUser } = user;
+      return safeUser;
+    }
+
+    /**
+     * 修改密码（校验旧密码）
+     * @param {{ userId: string, oldPassword: string, newPassword: string }} param0
+     * @returns {boolean} 旧密码错误或用户不存在返回 false
+     */
+    changePassword({ userId, oldPassword, newPassword }) {
+      const user = userPool.find((item) => item.userId === userId);
+      if (!user || user.password !== oldPassword) return false;
+      user.password = newPassword;
+      return true;
+    }
   };
 };

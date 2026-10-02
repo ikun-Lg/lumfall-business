@@ -3,6 +3,13 @@ module.exports = {
   name: "电商系统",
   menu: [
     {
+      key: "dashboard",
+      name: "数据看板",
+      menuType: "module",
+      moduleType: "custom",
+      customConfig: { path: "/dashboard" },
+    },
+    {
       key: "product",
       name: "商品管理",
       menuType: "module",
@@ -215,6 +222,7 @@ module.exports = {
     {
       key: "user",
       name: "用户管理",
+      roles: ["admin"], // RBAC：仅管理员可见（前端按当前用户角色过滤）
       menuType: "module",
       moduleType: "schema",
       schemaConfig: {

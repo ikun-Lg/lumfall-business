@@ -41,5 +41,34 @@ module.exports = (app) => {
 
       await this.success(ctx, user);
     }
+
+    // ===== 个人中心 =====
+
+    async updateProfile(ctx) {
+      const { auth: authService } = this.services;
+      const user = authService.updateProfile({
+        userId: ctx.user.userId,
+        nickname: ctx.request.body.nickname,
+      });
+      if (!user) {
+        await this.fail(ctx, "用户不存在", 50000);
+        return;
+      }
+      await this.success(ctx, user);
+    }
+
+    async changePassword(ctx) {
+      const { auth: authService } = this.services;
+      const result = authService.changePassword({
+        userId: ctx.user.userId,
+        oldPassword: ctx.request.body.oldPassword,
+        newPassword: ctx.request.body.newPassword,
+      });
+      if (!result) {
+        await this.fail(ctx, "原密码错误", 50000);
+        return;
+      }
+      await this.success(ctx, null);
+    }
   };
 };
