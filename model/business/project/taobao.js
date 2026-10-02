@@ -23,7 +23,7 @@ module.exports = {
             menuType: "module",
             moduleType: "custom",
             customConfig: {
-              path: "taobao/cpopon",
+              path: "/todo",
             },
           },
           {
@@ -32,7 +32,7 @@ module.exports = {
             menuType: "module",
             moduleType: "custom",
             customConfig: {
-              path: "taobao/limit",
+              path: "/todo",
             },
           },
           {
@@ -41,7 +41,7 @@ module.exports = {
             menuType: "module",
             moduleType: "custom",
             customConfig: {
-              path: "taobao/festival",
+              path: "/todo",
             },
           },
         ],
