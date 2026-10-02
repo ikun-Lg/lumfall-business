@@ -1,8 +1,8 @@
 {
-  "name": "lumfall-demo",
+  "name": "lumfall-business",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "基于 lumfall 的 B 端全栈模板：JWT 登录鉴权 + Dashboard DSL + schema 管理页，开箱即用",
+  "main": "server.js",
   "scripts": {
     "dev": "_ENV='local' nodemon --exitcrash server.js",
     "beta": "_ENV='beta' nodemon --exitcrash server.js",
@@ -14,7 +14,8 @@
     "new-page": "node ./node_modules/lumfall/scripts/generate-page.js"
   },
   "dependencies": {
-    "lumfall": "1.1.0"
+    "jsonwebtoken": "^9.0.3",
+    "lumfall": "^1.2.1"
   },
   "keywords": [],
   "author": "",

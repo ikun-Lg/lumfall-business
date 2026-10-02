@@ -30,4 +30,31 @@ module.exports = (app, router) => {
     "/api/project/product",
     businessController.deleteBusinessList.bind(businessController),
   );
+
+  // ===== 用户管理（schema 模块接口契约：列表 GET <api>/list，单条/增/改/删走 <api>） =====
+
+  router.get(
+    "/api/business/user/list",
+    businessController.getUserList.bind(businessController),
+  );
+
+  router.get(
+    "/api/business/user",
+    businessController.getUser.bind(businessController),
+  );
+
+  router.post(
+    "/api/business/user",
+    businessController.createUser.bind(businessController),
+  );
+
+  router.put(
+    "/api/business/user",
+    businessController.updateUser.bind(businessController),
+  );
+
+  router.delete(
+    "/api/business/user",
+    businessController.deleteUser.bind(businessController),
+  );
 };

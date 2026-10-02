@@ -1,18 +1,11 @@
 const { serviceStart } = require("lumfall");
 
-const app = serviceStart();
+const app = serviceStart({
+  // 应用名：渲染页面模板 <title> 时使用
+  name: "lumfall-business",
 
-console.log("middlewares", app.middlewares);
-console.log("router-schema", app.routerSchema);
-console.log("controllers", app.controllers);
-console.log("services", app.services);
-console.log("config", app.config);
-// extend loader 是把返回值直接挂到 app 上（框架自带 app.logger / app.health），
-// 并不存在 app.customExtend 这个聚合对象
-console.log("extend", { logger: typeof app.logger, health: typeof app.health });
+  // 未命中任何路由时的 302 兜底目标。传了 options 对象必须显式声明 homePath
+  homePath: "/view/project-list",
+});
 
 module.exports = app;
-
-
-
-

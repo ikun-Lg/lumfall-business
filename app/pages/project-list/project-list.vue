@@ -1,5 +1,11 @@
 <template>
   <HeaderContainer title="项目列表">
+    <template #setting-content>
+      <a-button type="text" size="small" @click="handleLogout">
+        <template #icon><icon-export /></template>
+        退出登录
+      </a-button>
+    </template>
     <template #main-content>
       <div class="project-list-page">
         <a-spin :loading="loading" class="page-spin">
@@ -43,7 +49,9 @@
 <script setup>
 import HeaderContainer from "$lumfallHeaderContainer";
 import { onMounted, ref } from "vue";
+import { Message } from "@arco-design/web-vue";
 import $curl from "$lumfallCurl";
+import { ensureAuth, logout } from "../common/auth.js";
 
 const loading = ref(false);
 const modelList = ref([]);
@@ -70,8 +78,16 @@ const onEnter = (project) => {
 };
 
 onMounted(() => {
+  // 登录守卫：无 token 直接跳登录页
+  if (!ensureAuth()) {
+    return;
+  }
   getModelList();
 });
+
+const handleLogout = () => {
+  logout();
+};
 </script>
 
 <style lang="less">

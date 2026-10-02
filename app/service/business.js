@@ -22,7 +22,35 @@ module.exports = (app) => {
       .replace("T", " "),
   }));
 
-  return class BusinessService extends BaseService {
+  // 用户管理 mock 数据池（登录账号见 app/service/auth.js，两者独立演示）
+
+
+  const userPool = Array.from({ length: 9 }, (_, i) => ({
+
+
+    userId: `U${String(i + 1).padStart(4, "0")}`,
+
+
+    userName: i === 0 ? "admin" : `user${i}`,
+
+
+    nickname: i === 0 ? "管理员" : `用户${i}`,
+
+
+    role: i === 0 ? "admin" : "user",
+
+
+    status: i % 3 === 0 ? "0" : "1",
+
+
+    createTime: new Date(Date.now() - i * 86400000).toISOString().slice(0, 19).replace("T", " "),
+
+
+  }));
+
+
+  
+return class BusinessService extends BaseService {
     /**
      * 获取业务列表（mock）
      * @param {{ page: number, size: number }} param0
@@ -115,6 +143,64 @@ module.exports = (app) => {
      */
     getProductEnumList() {
       return PRODUCT_TYPE_ENUM_LIST.map(({ label, value }) => ({ label, value }));
+    }
+
+    // ===== 用户管理（mock，与 model/business/model.js 用户管理 schema 对应） =====
+
+    /**
+     * 分页查询用户（支持 userName 模糊 / status 过滤，空串表示不过滤）
+     */
+    getUserList({ page = 1, size = 50, userName = "", status = "" }) {
+      const filtered = userPool.filter((item) => {
+        if (userName && !item.userName.includes(userName)) return false;
+        if (status && item.status !== status) return false;
+        return true;
+      });
+      const start = (page - 1) * size;
+      return {
+        data: filtered.slice(start, start + size).map((item) => ({ ...item })),
+        total: filtered.length,
+      };
+    }
+
+    getUser({ userId }) {
+      return userPool.find((item) => item.userId === userId) || null;
+    }
+
+    createUser({ userName, nickname = "", role = "user", status = "1" }) {
+      if (userPool.some((item) => item.userName === userName)) {
+        return null; // 用户名已存在
+      }
+      const nextId = userPool.reduce((max, item) => {
+        return Math.max(max, Number(item.userId.slice(1)) || 0);
+      }, 0) + 1;
+      const user = {
+        userId: `U${String(nextId).padStart(4, "0")}`,
+        userName,
+        nickname: nickname || userName,
+        role,
+        status,
+        createTime: new Date().toISOString().slice(0, 19).replace("T", " "),
+      };
+      userPool.unshift(user);
+      return user;
+    }
+
+    updateUser({ userId, nickname, role, status }) {
+      const user = userPool.find((item) => item.userId === userId);
+      if (!user) return null;
+      for (const key of ["nickname", "role", "status"]) {
+        const value = { nickname, role, status }[key];
+        if (value !== undefined) user[key] = value;
+      }
+      return user;
+    }
+
+    deleteUser({ userId }) {
+      const index = userPool.findIndex((item) => item.userId === userId);
+      if (index === -1) return false;
+      userPool.splice(index, 1);
+      return true;
     }
   };
 };

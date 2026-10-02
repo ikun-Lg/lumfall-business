@@ -213,12 +213,135 @@ module.exports = {
       },
     },
     {
+      key: "user",
+      name: "用户管理",
+      menuType: "module",
+      moduleType: "schema",
+      schemaConfig: {
+        api: "/api/business/user",
+        schema: {
+          type: "object",
+          properties: {
+            userId: {
+              type: "string",
+              label: "用户ID",
+              tableOption: { width: 160 },
+              editFormOption: { componentType: "input", disabled: true },
+              detailPanelOption: {},
+            },
+            userName: {
+              type: "string",
+              label: "用户名",
+              minLength: 2,
+              maxLength: 32,
+              tableOption: { width: 160 },
+              searchOption: { componentType: "input", default: "", placeholder: "请输入用户名" },
+              createFormOption: { componentType: "input" },
+              editFormOption: { componentType: "input", disabled: true },
+              detailPanelOption: {},
+            },
+            nickname: {
+              type: "string",
+              label: "昵称",
+              maxLength: 32,
+              tableOption: { width: 160 },
+              createFormOption: { componentType: "input" },
+              editFormOption: { componentType: "input" },
+              detailPanelOption: {},
+            },
+            role: {
+              type: "string",
+              label: "角色",
+              tableOption: {
+                width: 120,
+                enumList: [
+                  { label: "管理员", value: "admin" },
+                  { label: "普通用户", value: "user" },
+                ],
+              },
+              searchOption: {
+                componentType: "select",
+                default: "",
+                enumList: [
+                  { label: "管理员", value: "admin" },
+                  { label: "普通用户", value: "user" },
+                ],
+              },
+              createFormOption: {
+                componentType: "select",
+                default: "user",
+                enumList: [
+                  { label: "管理员", value: "admin" },
+                  { label: "普通用户", value: "user" },
+                ],
+              },
+              editFormOption: {
+                componentType: "select",
+                enumList: [
+                  { label: "管理员", value: "admin" },
+                  { label: "普通用户", value: "user" },
+                ],
+              },
+              detailPanelOption: {},
+            },
+            status: {
+              type: "string",
+              label: "启用状态",
+              tableOption: {
+                width: 120,
+                enumList: [
+                  { label: "启用", value: "1" },
+                  { label: "停用", value: "0" },
+                ],
+              },
+              searchOption: {
+                componentType: "select",
+                default: "",
+                enumList: [
+                  { label: "启用", value: "1" },
+                  { label: "停用", value: "0" },
+                ],
+              },
+              detailPanelOption: {},
+            },
+            createTime: {
+              type: "string",
+              label: "创建时间",
+              tableOption: { width: 180 },
+              detailPanelOption: {},
+            },
+          },
+          required: ["userName"],
+        },
+        tableConfig: {
+          headerButtons: [
+            { label: "新增用户", eventKey: "showComponent", type: "outline", eventOption: { comName: "createForm" } },
+          ],
+          rowButtons: [
+            { label: "查看", eventKey: "showComponent", type: "primary", eventOption: { comName: "detailPanel" } },
+            { label: "修改", eventKey: "showComponent", type: "warning", eventOption: { comName: "editForm" } },
+            {
+              label: "删除",
+              eventKey: "delete",
+              type: "danger",
+              eventOption: { params: { userId: "schema::userId" } },
+            },
+          ],
+          componentConfig: {
+            createForm: { title: "新增用户", saveBtnText: "新增用户" },
+            editForm: { mainKey: "userId", title: "修改用户", saveBtnText: "保存修改" },
+            detailPanel: { mainKey: "userId", title: "用户详情" },
+          },
+        },
+      },
+    },
+    {
       key: "order",
       name: "订单管理",
       menuType: "module",
       moduleType: "custom",
       customConfig: {
-        path: "/order",
+        path: "/todo",
       },
     },
     {
