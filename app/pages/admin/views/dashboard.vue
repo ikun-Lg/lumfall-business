@@ -19,13 +19,13 @@
     <a-row :gutter="16" class="chart-row">
       <a-col :xs="24" :lg="16">
         <div class="chart-card">
-          <div class="chart-title">近 7 日订单与销售额</div>
+          <div class="chart-title">近 7 日{{ trendSuffix }}</div>
           <div ref="trendRef" class="chart-body"></div>
         </div>
       </a-col>
       <a-col :xs="24" :lg="8">
         <div class="chart-card">
-          <div class="chart-title">商品分类占比</div>
+          <div class="chart-title">{{ distTitle }}</div>
           <div ref="pieRef" class="chart-body"></div>
         </div>
       </a-col>
@@ -34,36 +34,49 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from "vue";
+// 数据看板：一个页面服务两个业务系统——统计口径由当前系统（DSL Model）决定，
+// 接口带 domain 参数（commerce / course），切换系统后自动重拉。
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import * as echarts from "echarts";
+import { useAdminStore } from "../stores/admin";
 import { request } from "../../common/auth";
+
+const store = useAdminStore();
+
+const isCommerce = computed(() => store.domain === "commerce");
+const trendSuffix = computed(() => (isCommerce.value ? "订单与销售额" : "报名与课程收入"));
+const distTitle = computed(() => (isCommerce.value ? "商品分类销售占比" : "课程分类收入占比"));
 
 const trendRef = ref(null);
 const pieRef = ref(null);
-const stats = ref({});
 const statCards = ref([]);
 
 const PRIMARY = "#165dff";
+const TEAL = "#14c9c9";
 
 let trendChart = null;
 let pieChart = null;
 let onResize = null;
 
 const renderCharts = (trends, categories) => {
-  if (trendRef.value) {
-    trendChart = echarts.init(trendRef.value);
-    trendChart.setOption({
+  trendChart.setOption(
+    {
       tooltip: { trigger: "axis" },
-      legend: { data: ["订单量", "销售额"], bottom: 0 },
+      legend: {
+        data: isCommerce.value
+          ? ["订单量", "销售额"]
+          : ["报名量", "课程收入"],
+        bottom: 0,
+      },
       grid: { left: 48, right: 56, top: 32, bottom: 48 },
       xAxis: { type: "category", data: trends.dates, boundaryGap: false },
       yAxis: [
-        { type: "value", name: "订单量" },
-        { type: "value", name: "销售额", splitLine: { show: false } },
+        { type: "value", name: isCommerce.value ? "订单量" : "报名量" },
+        { type: "value", name: isCommerce.value ? "销售额" : "收入", splitLine: { show: false } },
       ],
       series: [
         {
-          name: "订单量",
+          name: isCommerce.value ? "订单量" : "报名量",
           type: "line",
           smooth: true,
           yAxisIndex: 0,
@@ -72,23 +85,23 @@ const renderCharts = (trends, categories) => {
           itemStyle: { color: PRIMARY },
         },
         {
-          name: "销售额",
+          name: isCommerce.value ? "销售额" : "课程收入",
           type: "line",
           smooth: true,
           yAxisIndex: 1,
           data: trends.sales,
           areaStyle: { opacity: 0.08 },
-          itemStyle: { color: "#14c9c9" },
+          itemStyle: { color: TEAL },
         },
       ],
-    });
-  }
+    },
+    true
+  );
 
-  if (pieRef.value) {
-    pieChart = echarts.init(pieRef.value);
-    pieChart.setOption({
+  pieChart.setOption(
+    {
       tooltip: { trigger: "item" },
-      legend: { bottom: 0 },
+      legend: { bottom: 0, type: "scroll" },
       series: [
         {
           type: "pie",
@@ -97,38 +110,61 @@ const renderCharts = (trends, categories) => {
           itemStyle: { borderRadius: 6 },
           label: { formatter: "{b}: {c}" },
           data: categories,
-          color: [PRIMARY, "#14c9c9", "#ff7d00"],
+          color: [PRIMARY, TEAL, "#ff7d00", "#f53f3f", "#d094ff", "#00b42a", "#f7ba1e", "#722ed1"],
         },
       ],
-    });
+    },
+    true
+  );
+};
+
+const loadDashboard = async () => {
+  const domainParam = { domain: store.domain };
+  const [statsRes, trendRes] = await Promise.all([
+    request({ method: "get", url: "/api/dashboard/stats", query: domainParam }),
+    request({ method: "get", url: "/api/dashboard/trends", query: domainParam }),
+  ]);
+
+  if (statsRes?.success) {
+    const stats = statsRes.data;
+    statCards.value = isCommerce.value
+      ? [
+          { label: "今日订单", value: stats.todayOrders, icon: "IconFile", bg: "rgba(22,93,255,.12)" },
+          { label: "今日销售额", value: `¥ ${stats.todaySales}`, icon: "IconArrowRise", bg: "rgba(0,180,42,.12)" },
+          { label: "会员总数", value: stats.userCount, icon: "IconUserGroup", bg: "rgba(255,125,0,.14)" },
+          { label: "今日访问", value: stats.visitCount, icon: "IconEye", bg: "rgba(208,148,255,.16)" },
+        ]
+      : [
+          { label: "今日报名", value: stats.todayOrders, icon: "IconFile", bg: "rgba(22,93,255,.12)" },
+          { label: "今日收入", value: `¥ ${stats.todaySales}`, icon: "IconArrowRise", bg: "rgba(0,180,42,.12)" },
+          { label: "学员总数", value: stats.userCount, icon: "IconUserGroup", bg: "rgba(255,125,0,.14)" },
+          { label: "今日访问", value: stats.visitCount, icon: "IconEye", bg: "rgba(208,148,255,.16)" },
+        ];
+  }
+
+  if (trendRes?.success) {
+    if (!trendChart && trendRef.value) trendChart = echarts.init(trendRef.value);
+    if (!pieChart && pieRef.value) pieChart = echarts.init(pieRef.value);
+    renderCharts(trendRes.data.trends, trendRes.data.categories);
   }
 };
 
 onMounted(async () => {
-  const [statsRes, trendRes] = await Promise.all([
-    request({ method: "get", url: "/api/dashboard/stats" }),
-    request({ method: "get", url: "/api/dashboard/trends" }),
-  ]);
-
-  if (statsRes?.success) {
-    stats.value = statsRes.data;
-    statCards.value = [
-      { label: "今日订单", value: stats.value.todayOrders, icon: "IconFile", bg: "rgba(22,93,255,.12)" },
-      { label: "今日销售额", value: `¥ ${stats.value.todaySales}`, icon: "IconTrendingUp", bg: "rgba(0,180,42,.12)" },
-      { label: "用户总数", value: stats.value.userCount, icon: "IconUserGroup", bg: "rgba(255,125,0,.14)" },
-      { label: "今日访问", value: stats.value.visitCount, icon: "IconEye", bg: "rgba(208,148,255,.16)" },
-    ];
-  }
-
-  if (trendRes?.success) {
-    renderCharts(trendRes.data.trends, trendRes.data.categories);
-    onResize = () => {
-      trendChart?.resize();
-      pieChart?.resize();
-    };
-    window.addEventListener("resize", onResize);
-  }
+  await loadDashboard();
+  onResize = () => {
+    trendChart?.resize();
+    pieChart?.resize();
+  };
+  window.addEventListener("resize", onResize);
 });
+
+// 顶部切换系统后，看板随当前系统口径刷新
+watch(
+  () => store.domain,
+  async () => {
+    await loadDashboard();
+  }
+);
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", onResize);

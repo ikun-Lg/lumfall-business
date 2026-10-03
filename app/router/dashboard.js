@@ -10,4 +10,14 @@ module.exports = (app, router) => {
     "/api/dashboard/trends",
     dashboardController.getTrends.bind(dashboardController)
   );
+
+  router.get(
+    "/api/analysis/sales",
+    dashboardController.getSalesAnalysis.bind(dashboardController)
+  );
+
+  router.get(
+    "/api/analysis/learning",
+    dashboardController.getLearningAnalysis.bind(dashboardController)
+  );
 };

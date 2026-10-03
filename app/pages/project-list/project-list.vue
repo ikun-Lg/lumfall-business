@@ -74,8 +74,9 @@ async function getModelList() {
 
 const onEnter = (project) => {
   const { origin } = window.location;
-  // 管理台项目进入自建 admin SPA，其余项目进框架 Dashboard
-  if (project.key === "admin") {
+  // 管理台项目进入自建 admin SPA（按 projectKey 决定初始系统），其余项目进框架 Dashboard
+  const ADMIN_PROJECT_KEYS = ["admin", "edu-admin"];
+  if (ADMIN_PROJECT_KEYS.includes(project.key)) {
     window.open(`${origin}/view/admin?projectKey=${project.key}`);
     return;
   }

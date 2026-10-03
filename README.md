@@ -1,102 +1,128 @@
 # lumfall-business
 
-基于 [lumfall](https://www.npmjs.com/package/lumfall) 的 **B 端全栈模板，开箱即用**：
-完整的管理台 SPA（对标主流 admin 后台）、JWT 登录鉴权、图表看板、RBAC 菜单权限、
-schema 驱动的增删改查页全部就位，克隆后改业务即可。
-
-## 包含什么
-
-| 能力 | 说明 |
-| --- | --- |
-| 管理台 SPA | `/view/admin`：可折叠侧栏（图标菜单）+ 顶栏（折叠/面包屑/暗黑切换/全屏/用户下拉）+ 统一页头内容区 |
-| JWT 登录鉴权 | 精美登录页 `/view/login` + `/api/auth/*` + `jwt-verify` 全局中间件；token 双通道（Authorization 头 + cookie，框架页面免改造） |
-| 数据看板 | 统计卡片 + ECharts 图表（近 7 日订单/销售额折线、分类占比饼图），接口 mock 可换真实聚合 |
-| Dashboard DSL 驱动菜单 | 侧栏菜单来自 `/api/project?projectKey=admin`（`model/` 下的 DSL 配置），schema/custom 模块自动映射路由 |
-| 通用 CRUD 页 | `/view/admin/schema/:key`：一份字段 schema 驱动 搜索栏 + 表格 + 表单/详情抽屉（DSL `xxxOption` 机制），零页面代码加管理页 |
-| RBAC | DSL 菜单项配 `roles: ["admin"]`，前端按当前用户角色过滤菜单 + 页面 403 拦截 |
-| 个人中心 | 修改昵称 / 修改密码 |
-| 参数校验 | 全部接口登记 router-schema，启动期校验路由一致性 |
+基于 [lumfall](https://www.npmjs.com/package/lumfall) 的 **B 端全栈管理台模板，开箱即用**：
+一个管理台承载**电商系统 + 课程系统**两套完整业务，Dashboard DSL 全形态驱动（菜单分组 /
+schema 四视图 / sider 复合视图 / iframe / custom），JWT 登录鉴权、RBAC、业务侧 DSL 扩展控件、
+插件化数据仓库、健康检查、请求观测全部就位，克隆后改业务即可。
 
 ## 快速开始
 
 ```sh
 pnpm install
-pnpm start:dev          # 本地开发（前端 HMR + 服务）
-# 或
-pnpm start:prod         # 生产构建 + 启动
+
+# 开发（前端 dev server + 服务并行）
+pnpm start:dev
+
+# 生产
+pnpm build:prod && pnpm prod
 ```
 
-访问 <http://localhost:3000/view/login>，默认账号 **admin / 123456**
-（mock 数据见 `app/service/auth.js`；生产环境用 `JWT_SECRET` 环境变量注入密钥）。
+访问 `http://localhost:3000/view/login`，默认账号：
 
-登录后进入项目工作台（`/view/project-list`），点击 **Lumfall Admin** 进入管理台；
-普通账号 `user / 123456` 用于验证 RBAC（看不到用户管理菜单）。
+| 账号 | 密码 | 角色 | 说明 |
+| --- | --- | --- | --- |
+| admin | 123456 | admin | 可见全部菜单（含退款管理、系统用户） |
+| user | 123456 | user | RBAC 演示：admin 专属菜单不可见 |
 
-## 页面流转
+## 包含什么
 
-```
-/view/login（登录）→ /view/project-list（项目工作台，可切多项目）
-    ├─ Lumfall Admin → /view/admin（管理台 SPA：看板 / 商品管理 / 用户管理 / 个人中心）
-    └─ 其他项目（taobao/jd/pdd…）→ /view/dashboard（框架 Dashboard，DSL 多项目演示）
-```
+| 能力 | 说明 |
+| --- | --- |
+| 管理台 SPA | `/view/admin`：可折叠图标侧栏 + 顶栏（**系统切换器** / 面包屑 / 暗黑切换 / 全屏 / 用户下拉） |
+| 双业务系统 | 顶部切换「电商系统 / 课程系统」——菜单、看板统计口径、分析页随系统切换；各自由一个 DSL Model 声明 |
+| JWT 登录鉴权 | 登录页 `/view/login` + `/api/auth/*` + `jwt-verify` 全局中间件；token 双通道（Authorization 头 + cookie） |
+| Dashboard DSL 全形态 | `model/` 声明菜单：`custom`（自定义页）/ `group`（分组子菜单）/ `schema`（CRUD 列表页）/ `sider`（侧边栏复合视图）/ `iframe`(嵌入页) 全部用上 |
+| 通用 CRUD 页 | `/view/admin/schema/:key`：一份字段 schema 驱动 搜索栏 + 表格 + 表单/详情抽屉，零页面代码加管理页 |
+| RBAC | DSL 菜单项配 `roles: ["admin"]`，前端按角色过滤菜单 + 页面 403 拦截 |
+| 业务侧 DSL 扩展 | 表单控件 `textarea` / `switch` / `radioGroup` / `rate` / `dynamicSelect`、搜索控件 `numberRange`，经框架 `$business*` 别名注册合并 |
+| 数据看板 | 统计卡片 + ECharts 双图表，`domain` 参数区分电商 / 课程聚合口径 |
+| 数据统计（sider） | 销售分析 / 学习分析页（30 日趋势、状态分布、Top 榜）+ 服务监控（iframe 内嵌 `/view/health`） |
+| 数据仓库插件 | `plugin/store` 经 `serviceStart({ plugins })` 挂载，内存数据仓库 + 全量 seed（重启不变），业务 service 零 SQL 起步 |
+| 服务端全 feat | 生命周期 hook（启动诊断摘要）、monitoring 请求观测（traceId 日志）、health 探针（`/health/ready`）、configSchema 配置强校验 |
+| 参数校验 | 全部接口程序化生成 router-schema，启动期校验路由一致性 |
+| 个人中心 | 修改昵称 / 修改密码 |
 
-## 登录鉴权说明
+## 两套业务系统
 
-```
-登录页 → POST /api/auth/login（免鉴权）→ 签发 JWT
-  ├─ 写入 localStorage（管理台 request() 自动带 Authorization 头）
-  └─ 写入 cookie lumfall_token（框架页面 $lumfallCurl 无法注入请求头，靠同源 cookie 携带）
+| 系统 | Model | 管理台 Project | 模块 |
+| --- | --- | --- | --- |
+| 电商系统 | `model/business/` | `admin` | 商品 / 分类 / 订单（发货·取消状态流转）/ 退款（审核，admin）\| 会员 / 系统用户（admin）\| 优惠券 / 轮播图 \| 数据统计（销售分析 + 服务监控） |
+| 课程系统 | `model/course/` | `edu-admin` | 课程 / 章节 / 分类（含业务扩展表单 dynamicSelect）\| 课时 / 讲师（rate 评分控件）/ 学员 \| 课程订单（退款流转）\| 数据统计（学习分析 + 服务监控） |
 
-所有 /api/* 请求经 app/middleware/api/jwt-verify.js 校验
-  免鉴权白名单：/api/auth/login、/api/project/*（框架 dashboard 元数据接口）
-  鉴权失败：HTTP 200 + { code: 401 }，前端 request() 封装统一跳转登录页
-```
+- 项目列表页 `/view/project-list` 展示全部 Model / Project，点卡片进入对应系统。
+- 换业务：改 `model/` 下的 DSL + `app/service` / `app/controller` 各加一组接口即可，页面零代码。
 
-- 管理台页面统一用 `app/pages/common/auth.js` 的 `request()` 发请求
-- `/api/project/*` 数据接口还需要 `project_key`：管理台入口已固定
-  `window.__LUMFALL__.projectKey`（`$lumfallCurl` 依赖它注入请求头）
-- 修改 token 有效期 / cookie 名 / 白名单：`config/config.default.js` 的 `security.jwt`
-  与 `app/middleware/api/jwt-verify.js`
+## DSL 用法
 
-## 目录速览
+完整编写规则见框架包内文档：`node_modules/lumfall/model/docs/dsl-guide.md`（菜单项、
+schemaConfig 四视图、按钮与动态组件、Model/Project 合并规则、接口契约）。
+
+本模板在框架契约之上做了三个**业务侧扩展**（均只改业务代码，未动框架）：
+
+| 扩展 | DSL 写法 | 实现位置 |
+| --- | --- | --- |
+| 状态流转按钮 | `eventKey: "patch"` + `eventOption.params`（支持 `"schema::<field>"` 取行值）+ `eventOption.confirm` 确认文案，走 `PATCH <api>` | `app/pages/admin/views/schema-page.vue` |
+| 行按钮显隐 | rowButtons 配 `visibleWhen: { field, value }`，按行数据决定按钮显示 | `app/pages/admin/components/business-table.vue` |
+| 行选择批量删除 | tableConfig 配 `rowSelection: true`，勾选后出现「批量删除」 | 同上 |
+
+扩展控件（`app/pages/widgets/` 下，经 `$businessFormItemConfig` / `$businessSearchItemConfig` 与框架内置注册表合并）：
+
+| 控件 | 用法 | 说明 |
+| --- | --- | --- |
+| 表单 `textarea` | `componentType: "textarea"` | 多行文本，maxLength 校验 |
+| 表单 `switch` | `componentType: "switch"` | `"1"/"0"` 字符串枚举与布尔互转 |
+| 表单 `radioGroup` | `componentType: "radioGroup"` + `enumList` | 横排单选，按枚举做 ajv 校验 |
+| 表单 `rate` | `componentType: "rate"` | 评分，minimum/maximum 校验 |
+| 表单 `dynamicSelect` | `componentType: "dynamicSelect"` + `api` | 表单侧动态下拉（外键字段必备，框架只有搜索侧） |
+| 搜索 `numberRange` | `componentType: "numberRange"` + `placeholder: [min, max]` | 下发 `<field>_min` / `<field>_max`，后端按区间过滤 |
+
+## 目录结构
 
 ```text
-app/
-├── controller/{auth,business,dashboard}.js   # 鉴权 / 商品与用户 / 看板数据
-├── service/{auth,business,dashboard}.js      # JWT（mock 账号）+ 数据逻辑（内存 mock）
-├── router/ + router-schema/                  # 路由与参数校验（一一对应）
-├── middleware/api/jwt-verify.js              # JWT 鉴权中间件
-├── middleware.js                             # 全局中间件注册
-└── pages/
-    ├── login/                                # 登录页
-    ├── project-list/                         # 项目工作台入口
-    ├── common/auth.js                        # token 工具 + request() 封装
-    └── admin/                                # 管理台 SPA
-        ├── entry.admin.js                    # 路由 + projectKey 固定 + 主题
-        ├── admin-config.js                   # 站点名 / 项目 key / 菜单图标 / custom 路由映射
-        ├── stores/admin.js                   # 用户 / 菜单 / 折叠 / 主题（pinia）
-        ├── layout/                           # 侧栏菜单 + 顶栏 + 布局
-        └── views/                            # dashboard / schema-page（通用 CRUD）/ profile / 404
-model/business/                               # Dashboard DSL（admin 项目 + 多项目演示）
+lumfall-business/
+├── server.js                  # serviceStart：插件 / configSchema / lifecycle / monitoring
+├── plugin/store/              # 数据仓库插件（内存 collections + seed 种子数据）
+├── model/                     # Dashboard DSL：business（电商）/ course（课程）各含 model.js + project/
+├── app/
+│   ├── lib/                   # 通用 CRUD 工厂：service / controller / router-schema / 路由注册
+│   ├── service/commerce|course/  # 领域 service（每集合一个，含删除引用校验示例）
+│   ├── controller/commerce|course/
+│   ├── router/  router-schema/
+│   ├── middleware/api/jwt-verify.js
+│   ├── extend/health-check.js # store 健康探针
+│   └── pages/
+│       ├── admin/             # 管理台 SPA（DSL 全形态消费端）
+│       │   ├── admin-config.js    # 系统映射 / 图标 / 路由映射（改站点先看这里）
+│       │   ├── stores/admin.js    # 系统切换 / 菜单 / RBAC / 主题
+│       │   ├── components/business-table.vue  # 表格：visibleWhen + 行选择
+│       │   └── views/             # dashboard / schema-page / sider-view / iframe-view / analysis-view
+│       ├── widgets/           # 业务侧 schema 控件注册表 + 扩展控件
+│       ├── login/  project-list/
+│       └── common/auth.js     # token 工具 + request 封装
+└── config/                    # 四环境配置（configSchema 强校验 security.jwt）
 ```
 
-## 二开指引
+## 服务端接口
 
-1. **加管理页**：`model/business/model.js` 加一个 `moduleType: "schema"` 菜单 +
-   四件套（controller/service/router/router-schema）照抄用户管理——侧栏菜单和
-   CRUD 页面自动生成，**无需写前端**
-2. **接数据库**：`app/service/*.js` 的内存 mock 换成真实存储——连接在
-   `serviceStart({ plugins })` 里初始化（见框架文档「插件」），请求阶段使用
-3. **自定义页面**：`app/pages/admin/admin-config.js` 的 `CUSTOM_ROUTES` 登记
-   管理台路由，`app/pages/dashboard/router.js` 注册框架 dashboard 路由
-4. **RBAC**：DSL 菜单项配 `roles` 数组即可；按钮级权限可在 `schema-page`
-   的按钮渲染处按 `store.user.role` 扩展
-5. **账号体系**：把 `app/service/auth.js` 的 mock 换成数据库查询；生产环境
-   密码用 bcrypt 等散列比对，不要明文存储
+schema 模块固定契约（`<api>` 为 DSL `schemaConfig.api`）：
 
-## DSL 与页面开发
+| 调用 | 方法 | 说明 |
+| --- | --- | --- |
+| `<api>/list` | GET | 分页 + 过滤（空串不过滤；`_min`/`_max` 区间；`_start`/`_end` 时间区间） |
+| `<api>` | GET / POST / PUT / PATCH / DELETE | 单条回显 / 新增 / 更新 / **状态流转** / 删除 |
+| `<api>Enum/list` | GET | dynamicSelect 选项源 `[{label, value}]` |
 
-- Dashboard DSL 编写规则：框架包内 `model/docs/dsl-guide.md`，或看在线文档的「DSL」章节
-- schema 模块的后端接口契约（`GET <api>/list` 等）：文档「接口契约」章节
-- 独立页面开发参考 `lumfall-basic-project/`
+聚合接口：`/api/dashboard/stats|trends?domain=commerce|course`、`/api/analysis/sales`、`/api/analysis/learning`。
 
+## 接入真实数据
+
+`plugin/store` 是接口约定的唯一实现点：保持 `collection(name)` 返回的
+`list / get / insert / update / remove` 签名（见 `plugin/store/index.js` 顶部注释），
+换成数据库驱动即可，service / controller / DSL 全部不动。seed 数据与 DSL 的
+`enumList` 同源（`plugin/store/seed.js` 导出枚举常量供 `model/*.js` 引用），改枚举一处生效。
+
+## 生产注意
+
+- `JWT_SECRET` 环境变量注入（`config/config.prod.js`），见 config.default.js 注释。
+- 接口签名 `security.apiSignature.enabled` 按需开启（前端 `$lumfallCurl` 自动携带 s_t / s_sign）。
+- 构建产物按 `_ENV` 分目录（`app/public/dist/dev|prod/`），切换模式后重新构建并重启服务（模板在启动期载入内存）。

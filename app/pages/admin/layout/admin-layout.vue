@@ -12,7 +12,7 @@
         <div class="brand-logo">L</div>
         <span v-if="!store.collapsed" class="brand-name">{{ siteName }}</span>
       </div>
-      <SideMenu :icons="menuIcons" :custom-routes="customRoutes" />
+      <SideMenu :icons="menuIcons" />
     </a-layout-sider>
 
     <a-layout class="layout-main">
@@ -33,10 +33,9 @@ import SideMenu from "./side-menu.vue";
 import HeaderBar from "./header-bar.vue";
 import { useAdminStore } from "../stores/admin";
 import {
-  PROJECT_KEY,
   SITE_NAME,
   MENU_ICONS,
-  CUSTOM_ROUTES,
+  DEFAULT_PROJECT_KEY,
 } from "../admin-config";
 import { ensureAuth, request, handleUnauthorized } from "../../common/auth";
 
@@ -45,7 +44,6 @@ const route = useRoute();
 const router = useRouter();
 const siteName = SITE_NAME;
 const menuIcons = MENU_ICONS;
-const customRoutes = CUSTOM_ROUTES;
 
 const goHome = () => router.push("/view/admin");
 
@@ -61,27 +59,23 @@ onMounted(async () => {
   }
   store.setUser(userRes.data);
 
-  // 菜单来自 Dashboard DSL（/api/project 返回合并后的项目菜单）
-  const menuRes = await request({
-    method: "get",
-    url: "/api/project",
-    query: { projectKey: PROJECT_KEY },
-    headers: { project_key: PROJECT_KEY },
-  });
-  if (menuRes && menuRes.success) {
-    store.setMenuList(menuRes.data?.menu || []);
-  }
+  // 系统列表（DSL Model 维度）+ 初始系统菜单
+  await store.loadModelList();
+  const requested = String(route.query.projectKey || "");
+  const validKeys = store.adminSystems.map((system) => system.projectKey);
+  const initialKey = validKeys.includes(requested) ? requested : DEFAULT_PROJECT_KEY;
+  await store.switchSystem(initialKey);
 
   // 深链接兜底：管理台路由统一携带 projectKey（$lumfallCurl 依赖它注入请求头）
-  if (route.path.startsWith("/view/admin") && route.query.projectKey !== PROJECT_KEY) {
-    router.replace({ path: route.path, query: { ...route.query, projectKey: PROJECT_KEY } });
+  if (route.path.startsWith("/view/admin") && route.query.projectKey !== store.projectKey) {
+    router.replace({ path: route.path, query: { ...route.query, projectKey: store.projectKey } });
     return;
   }
 
   // /view/admin 根路径 → 第一个可见菜单
   if (route.path === "/view/admin") {
-    const first = store.firstMenuRoute(CUSTOM_ROUTES);
-    if (first) router.replace({ path: first, query: { projectKey: PROJECT_KEY } });
+    const first = store.firstMenuRoute();
+    if (first) router.replace({ path: first, query: { projectKey: store.projectKey } });
   }
 });
 </script>
